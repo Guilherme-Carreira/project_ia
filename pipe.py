@@ -1,3 +1,5 @@
+from sys import stdin
+
 class Board:
     def adjacent_vertical_values(self, row: int, col, int):
         pass
@@ -6,4 +8,14 @@ class Board:
 
 @staticmethod
 def parseinstance():
-    pass
+    board = []
+    index = 0
+    while True:
+        line = stdin.readline()
+        if not line:
+            break
+        board[index] = line
+        index = index + 1
+
+
+    return Board(board)
