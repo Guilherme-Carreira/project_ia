@@ -1,10 +1,16 @@
-# python3.8.2 para nao haver problemas com a versao do python
-# PipeMania
+
 # algoritmo de procura ..?
+
 # perceber casos que pecas nunca podem estar conectadas
+
 # pip e codigo de outras pessoas nao pode ser importe
+
 #ficheiros procuras nao sao alterados
+
 # alterar classe state e pq foi alterada por comentários
+
 #classe PipeMania e a principal com as acoes da peca, e o que acontece em cada acao (transition model),
+
 # def h heuristica do projeto 
+
 # fazer board e parse_instance
