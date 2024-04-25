@@ -3,8 +3,8 @@
 # Além das funções e classes sugeridas, podem acrescentar outras que considerem pertinentes.
 
 # Grupo 05:
-# 106492 Marcio Simoes
-# 106690 Joao Guilherme Carreira
+# 106492 Marcio Filipe Simoes
+# 106965 Joao Guilherme Carreira
 
 import sys
 from search import (
@@ -33,38 +33,38 @@ class PipeManiaState:
 
 
 class Board:
-    """Representação interna de um tabuleiro de PipeMania."""
 
-    def get_value(self, row: int, col: int) -> str:
-        """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+    def __init__(self, grid: tuple): # definir o grid como um tuplo
+        self.grid = grid
+      
+    def get_value(self, row: int, col: int):
+        return self.grid[row][col]
+    
+    def adjacent_vertical_values(self, row: int, col: int): # acima e abaixo
+        if row == 0: # se for a primeira linha
+            return (None, self.grid[row + 1][col])
+        elif row == len(self.grid) - 1: # se for a ultima linha
+            return (self.grid[row - 1][col], None)
+        else: # se for qualquer outra linha no meio
+            return (self.grid[row - 1][col], self.grid[row + 1][col])
 
-    def adjacent_vertical_values(self, row: int, col: int):
-        """Devolve os valores imediatamente acima e abaixo,
-        respectivamente."""
-        # TODO
-        pass
+    def adjacent_horizontal_values(self, row: int, col: int): # esquerda e direita
+        if col == 0:
+            return (None, self.grid[row][col + 1])
+        elif col == len(self.grid) - 1:
+            return (self.grid[row][col - 1], None)
+        else:
+            return (self.grid[row][col - 1], self.grid[row][col + 1])
 
-    def adjacent_horizontal_values(self, row: int, col: int):
-        """Devolve os valores imediatamente à esquerda e à direita,
-        respectivamente."""
-        # TODO
-        pass
 
     @staticmethod
-    def parse_instance():
-        """Lê o test do standard input (stdin) que é passado como argumento
-        e retorna uma instância da classe Board.
-
-        Por exemplo:
-            $ python3 pipe.py < test-01.txt
-
-            > from sys import stdin
-            > line = stdin.readline().split()
-        """
-        # TODO
-        pass
+    def parseinstance(): 
+        grid = []
+        for line in sys.stdin: # le do stdin e o line e cada linha 
+            grid.append(tuple(line.strip().split(' '))) # strip() remove \n e \t do tuplo e split() divide 
+            if not line:
+                break
+        return Board(grid)
 
     # TODO: outros metodos da classe
 
