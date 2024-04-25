@@ -14,9 +14,9 @@ class Board:
       return (self.grid[row - 1][col], self.grid[row + 1][col])
 
   def adjacent_horizontal_values(self, row: int, col: int): # esquerda e direita
-    if row == 0:
+    if col == 0:
       return (None, self.grid[row][col + 1])
-    elif row == len(self.grid) - 1:
+    elif col == len(self.grid) - 1:
       return (self.grid[row][col - 1], None)
     else:
       return (self.grid[row][col - 1], self.grid[row][col + 1])
