@@ -40,13 +40,13 @@ class Board:
         # TODO
         pass
 
-    def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
+    def adjacent_vertical_values(self, row: int, col: int):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
         # TODO
         pass
 
-    def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
+    def adjacent_horizontal_values(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         # TODO
