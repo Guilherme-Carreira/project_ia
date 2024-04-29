@@ -26,7 +26,7 @@ class Board:
     def parseinstance(): 
         grid = []
         for line in stdin: # le do stdin e o line e cada linha 
-            grid.append(tuple(line.strip().split(' '))) # strip() remove \n e \t do tuplo e split() divide 
+            grid.append(tuple(line.strip().split())) # strip() remove \n e \t do tuplo e split() divide 
             if not line:
                 break
         return Board(grid)
