@@ -29,8 +29,47 @@ class PipeManiaState:
     def __lt__(self, other):
         return self.id < other.id
 
-    # TODO: outros metodos da classe
+class Piece:
+    def __init__(self, piece: str, row: int, col: int):
+        self.row = row
+        self.col = col
+        if piece[0] == 'F':
+            self.type = "FINAL"
+        elif piece[0] == 'B':
+            self.type = "TRIPLE"
+        elif piece[0] == 'V':
+            self.type = "DOUBLE"
+        elif piece[0] == 'L':
+            self.type = "STRAIGHT"
 
+        if piece[1] == 'C':
+            self.orientation = "UP"
+        elif piece[1] == 'B':
+            self.orientation = "DOWN"
+        elif piece[1] == 'E':
+            self.orientation = "LEFT"
+        elif piece[1] == 'D':
+            self.orientation = "RIGHT"
+        elif piece[1] == 'H':
+            self.orientation = "HORIZONTAL"
+        elif piece[1] == 'V':
+            self.orientation = "VERTICAL"
+            
+    def get_type(self):
+        return self.type
+    
+    def get_orientation(self):
+        return self.orientation        
+            
+    def get_row(self):
+        return self.row
+    
+    def get_column(self):
+        return self.col
+    
+    def visualize(self):
+        return self.orientation + ' ' + self.type
+    
 
 class Board:
 
@@ -60,13 +99,20 @@ class Board:
     @staticmethod
     def parseinstance(): 
         grid = []
+        row = 0
+        col = 0
         for line in sys.stdin: # le do stdin e o line e cada linha 
-            grid.append(tuple(line.strip().split(' '))) # strip() remove \n e \t do tuplo e split() divide 
+            current_line = line.strip().split() # strip() remove \n e \t do tuplo e split() divide 
+            row_pieces = []
+            for piece in current_line:
+                row_pieces.append(Piece(piece, row, col))
+                col += 1
+            grid.append(row_pieces)
+            row += 1
+            col = 0
             if not line:
                 break
         return Board(grid)
-
-    # TODO: outros metodos da classe
 
 
 class PipeMania(Problem):
