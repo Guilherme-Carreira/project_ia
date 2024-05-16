@@ -226,11 +226,35 @@ class PipeMania(Problem):
         pass
 
     def goal_test(self, state: PipeManiaState):
-        """Retorna True se e só se o estado passado como argumento é
-        um estado objetivo. Deve verificar se todas as posições do tabuleiro
-        estão preenchidas de acordo com as regras do problema."""
-        # TODO
-        pass
+        board = state.board
+        grid = board.grid
+        board.print_board()
+        for row in grid:
+            for piece in row:
+                adjacent_connections = [None, None, None, None]
+                left, right = board.adjacent_horizontal_values(piece.row, piece.col)
+                top, bottom = board.adjacent_horizontal_values(piece.row, piece.col)
+                if top != None:
+                    adjacent_connections[0] = top.get_connection(2)
+                if right != None:
+                    adjacent_connections[1] = right.get_connection(3)
+                if bottom != None:
+                    adjacent_connections[2] = bottom.get_connection(0)
+                if left != None:
+                    adjacent_connections[3] = left.get_connection(1)
+                
+                if piece.get_connection(0) != adjacent_connections[0] and (piece.get_connection(0) != False or adjacent_connections[0] != None):
+                    return False
+                if piece.get_connection(1) != adjacent_connections[1] and (piece.get_connection(1) != False or adjacent_connections[1] != None):
+                    return False
+                if piece.get_connection(2) != adjacent_connections[2] and (piece.get_connection(2) != False or adjacent_connections[2] != None):
+                    return False
+                if piece.get_connection(3) != adjacent_connections[3] and (piece.get_connection(3) != False or adjacent_connections[3] != None):
+                    return False
+                
+            
+        return True
+            
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -242,7 +266,9 @@ class PipeMania(Problem):
 if __name__ == "__main__":
     # TODO:
     board = Board.parseinstance()
-    board.print_board()
+    state = PipeManiaState(board)
+    pipemania = PipeMania(state)
+    print(pipemania.goal_test(state))
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
