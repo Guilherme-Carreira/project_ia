@@ -32,14 +32,14 @@ class Piece:
     def __init__(self, piece: str, row: int, col: int):
         self.type = piece[0]
         self.orientation = piece[1]
-        self.connections = self.calculate_connections(self, piece)
+        self.connections = self.calculate_connections(piece)
         self.row = row
         self.col = col
         self.solved = False
             
     def change_orientation(self, new_piece: str):
         if new_piece[0] == self.type:
-            self.connections = self.calculate_connections(self, new_piece)
+            self.connections = self.calculate_connections(new_piece)
             self.orientation = new_piece[1]
             
     def calculate_connections(self, new_piece: str):
@@ -72,6 +72,12 @@ class Piece:
             
         return new_connections
     
+    def is_solved(self):
+        return self.solved
+    
+    def get_connection(self, index: int):
+        return self.connections[index]
+    
     def print_piece(self):
         return self.orientation + self.type
     
@@ -96,6 +102,47 @@ class Board:
             return (self.grid[row][col - 1], None)
         else:
             return (self.grid[row][col - 1], self.grid[row][col + 1])
+        
+    def get_restrictions(self, piece: Piece):
+        row = piece.row
+        col = piece.col
+        left, right = self.adjacent_horizontal_values(row, col)
+        top, bottom = self.adjacent_vertical_values(row, col)
+        restrictions = [None, None, None, None]
+        
+        if top != None:
+            if top.is_solved():
+                restrictions[0] = left.get_connection(2)
+            else:
+                restrictions[0] = False
+        elif top == None:
+            restrictions[0] = False
+            
+        if right != None:
+            if right.is_solved():
+                restrictions[1] = left.get_connection(3)
+            else:
+                restrictions[1] = False
+        elif right == None:
+            restrictions[1] = False
+            
+        if bottom != None:
+            if bottom.is_solved():
+                restrictions[2] = left.get_connection(0)
+            else:
+                restrictions[2] = False
+        elif bottom == None:
+            restrictions[2] = False
+            
+        if left != None:
+            if left.is_solved():
+                restrictions[3] = left.get_connection(1)
+            else:
+                restrictions[3] = False
+        elif left == None:
+            restrictions[3] = False
+        return restrictions
+        
         
     def in_corner(self, piece: Piece):
         row = piece.row
