@@ -36,6 +36,7 @@ class Piece:
         self.row = row
         self.col = col
         self.solved = False
+        self.actions = []
             
     def change_orientation(self, new_piece: str):
         if new_piece[0] == self.type:
@@ -186,7 +187,6 @@ class Board:
                 if (j != 0):
                     print('\t', end = '')
                 print(board[i][j].print_piece(), end = '')
-        print('\n')
         return
 
     @staticmethod
@@ -212,10 +212,243 @@ class PipeMania(Problem):
         self.state = state
 
     def actions(self, state: PipeManiaState):
-        """Retorna uma lista de ações que podem ser executadas a
-        partir do estado passado como argumento."""
-        # TODO
-        pass
+        board = state.board
+        grid = board.grid
+        for row in grid:
+            for piece in row:
+                corner = board.in_corner(piece)
+                if corner != False:
+                    if corner == "TL":
+                        if piece.type == "V":
+                            if piece.orientation == "B":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["VB", piece.row, piece.col])
+                        elif piece.type == "F":
+                            if piece.orientation == "B":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                            elif piece.orientation == "D":
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FB", piece.row, piece.col])
+                                piece.actions.append(["FD", piece.row, piece.col])
+                    elif corner == "TR":
+                        if piece.type == "V":
+                            if piece.orientation == "E":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["VE", piece.row, piece.col])
+                        elif piece.type == "F":
+                            if piece.orientation == "E":
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "B":
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                    elif corner == "BL":
+                        if piece.type == "V":
+                            if piece.orientation == "D":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["VD", piece.row, piece.col])
+                        elif piece.type == "F":
+                            if piece.orientation == "C":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                            elif piece.orientation == "D":
+                                piece.actions.append(["FC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FD", piece.row, piece.col])
+                    elif corner == "BR":
+                        if piece.type == "V":
+                            if piece.orientation == "C":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["VC", piece.row, piece.col])
+                        elif piece.type == "F":
+                            if piece.orientation == "C":
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            elif piece.orientation == "E":
+                                piece.actions.append(["FC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            
+                wall = board.in_wall(piece)
+                if wall != False and corner == False:
+                    if piece.type == "F":
+                        if wall == "L":
+                            if piece.orientation == "D":
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "C":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "B":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                                piece.actions.append(["FC", piece.row, piece.col])
+                        elif wall == "R":
+                            if piece.orientation == "E":
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "C":
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "B":
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                        elif wall == "T":                         
+                            if piece.orientation == "D":
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "E":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                            elif piece.orientation == "B":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FB", piece.row, piece.col])
+                                piece.actions.append(["FD", piece.row, piece.col])
+                        elif wall == "B":
+                            if piece.orientation == "D":
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            elif piece.orientation == "C":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FE", piece.row, piece.col])
+                            elif piece.orientation == "E":
+                                piece.actions.append(["FD", piece.row, piece.col])
+                                piece.actions.append(["FC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["FE", piece.row, piece.col])
+                                piece.actions.append(["FC", piece.row, piece.col])
+                                piece.actions.append(["FD", piece.row, piece.col])
+                    elif piece.type == "B":
+                        if wall == "L":
+                            if piece.orientation == "D":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["BD", piece.row, piece.col])
+                        elif wall == "R":
+                            if piece.orientation == "E":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["BE", piece.row, piece.col])
+                        elif wall == "T":                         
+                            if piece.orientation == "B":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["BB", piece.row, piece.col])
+                        elif wall == "B":
+                            if piece.orientation == "C":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["BC", piece.row, piece.col])
+                    elif piece.type == "V":
+                        if wall == "L":
+                            if piece.orientation == "B":
+                                piece.actions.append(["VD", piece.row, piece.col])
+                            elif piece.orientation == "D":
+                                piece.actions.append(["VB", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["VD", piece.row, piece.col])
+                                piece.actions.append(["VB", piece.row, piece.col])
+                        elif wall == "R":
+                            if piece.orientation == "C":
+                                piece.actions.append(["VE", piece.row, piece.col])
+                            elif piece.orientation == "E":
+                                piece.actions.append(["VC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["VC", piece.row, piece.col])
+                                piece.actions.append(["VE", piece.row, piece.col])
+                        elif wall == "T":                         
+                            if piece.orientation == "B":
+                                piece.actions.append(["VE", piece.row, piece.col])
+                            elif piece.orientation == "E":
+                                piece.actions.append(["VB", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["VB", piece.row, piece.col])
+                                piece.actions.append(["VE", piece.row, piece.col])
+                        elif wall == "B":
+                            if piece.orientation == "C":
+                                piece.actions.append(["VD", piece.row, piece.col])
+                            elif piece.orientation == "D":
+                                piece.actions.append(["VC", piece.row, piece.col])
+                            else:
+                                piece.actions.append(["VC", piece.row, piece.col])
+                                piece.actions.append(["VD", piece.row, piece.col])
+                    elif piece.type == "L":
+                        if wall == "L" or wall == "R":
+                            if piece.orientation == "V":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["LV", piece.row, piece.col])
+                        elif wall == "T" or wall == "B":
+                            if piece.orientation == "H":
+                                piece.actions.append([])
+                            else:
+                                piece.actions.append(["LH", piece.row, piece.col])
+                    
+                if corner == False and wall == False:
+                    if piece.type == "F":
+                        piece.actions.append(["FE", piece.row, piece.col])
+                        piece.actions.append(["FD", piece.row, piece.col])
+                        piece.actions.append(["FC", piece.row, piece.col])
+                        piece.actions.append(["FB", piece.row, piece.col])
+                        if piece.orientation == "E":
+                            piece.actions.remove(["FE", piece.row, piece.col])
+                        elif piece.orientation == "D":
+                            piece.actions.remove(["FD", piece.row, piece.col])
+                        elif piece.orientation == "C":
+                            piece.actions.remove(["FC", piece.row, piece.col])
+                        elif piece.orientation == "B":
+                            piece.actions.remove(["FB", piece.row, piece.col])
+                    elif piece.type == "B":
+                        piece.actions.append(["BE", piece.row, piece.col])
+                        piece.actions.append(["BD", piece.row, piece.col])
+                        piece.actions.append(["BC", piece.row, piece.col])
+                        piece.actions.append(["BB", piece.row, piece.col])
+                        if piece.orientation == "E":
+                            piece.actions.remove(["BE", piece.row, piece.col])
+                        elif piece.orientation == "D":
+                            piece.actions.remove(["BD", piece.row, piece.col])
+                        elif piece.orientation == "C":
+                            piece.actions.remove(["BC", piece.row, piece.col])
+                        elif piece.orientation == "B":
+                            piece.actions.remove(["BB", piece.row, piece.col])
+                    elif piece.type == "V":
+                        piece.actions.append(["VE", piece.row, piece.col])
+                        piece.actions.append(["VD", piece.row, piece.col])
+                        piece.actions.append(["VC", piece.row, piece.col])
+                        piece.actions.append(["VB", piece.row, piece.col])
+                        if piece.orientation == "E":
+                            piece.actions.remove(["VE", piece.row, piece.col])
+                        elif piece.orientation == "D":
+                            piece.actions.remove(["VD", piece.row, piece.col])
+                        elif piece.orientation == "C":
+                            piece.actions.remove(["VC", piece.row, piece.col])
+                        elif piece.orientation == "B":
+                            piece.actions.remove(["VB", piece.row, piece.col])
+                    elif piece.type == "L":
+                        if piece.orientation == "H":
+                            piece.actions.append(["LV", piece.row, piece.col])
+                        elif piece.orientation == "V":
+                            piece.actions.append(["LH", piece.row, piece.col])
+                            
+                print(piece.actions)
+
+                    
 
     def result(self, state: PipeManiaState, action):
         """Retorna o estado resultante de executar a 'action' sobre
@@ -267,8 +500,8 @@ if __name__ == "__main__":
     state = PipeManiaState(board)
     pipemania = PipeMania(state)
     print(pipemania.goal_test(state))
+    pipemania.actions(state)
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    pass
