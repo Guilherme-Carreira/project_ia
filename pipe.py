@@ -79,7 +79,7 @@ class Piece:
         return self.connections[index]
     
     def print_piece(self):
-        return self.orientation + self.type
+        return self.type + self.orientation
     
 class Board:
 
@@ -228,12 +228,11 @@ class PipeMania(Problem):
     def goal_test(self, state: PipeManiaState):
         board = state.board
         grid = board.grid
-        board.print_board()
         for row in grid:
             for piece in row:
                 adjacent_connections = [None, None, None, None]
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
-                top, bottom = board.adjacent_horizontal_values(piece.row, piece.col)
+                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                 if top != None:
                     adjacent_connections[0] = top.get_connection(2)
                 if right != None:
@@ -252,7 +251,6 @@ class PipeMania(Problem):
                 if piece.get_connection(3) != adjacent_connections[3] and (piece.get_connection(3) != False or adjacent_connections[3] != None):
                     return False
                 
-            
         return True
             
 
