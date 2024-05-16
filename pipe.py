@@ -32,9 +32,45 @@ class Piece:
     def __init__(self, piece: str, row: int, col: int):
         self.type = piece[0]
         self.orientation = piece[1]
+        self.connections = self.calculate_connections(self, piece)
         self.row = row
         self.col = col
         self.solved = False
+            
+    def change_orientation(self, new_piece: str):
+        if new_piece[0] == self.type:
+            self.connections = self.calculate_connections(self, new_piece)
+            self.orientation = new_piece[1]
+            
+    def calculate_connections(self, new_piece: str):
+        new_connections = [False, False, False, False] # [CIMA, DIREITA, BAIXO, ESQUERDA]
+            
+        if new_piece[1] == "C":
+            new_connections[0] = True
+            direction = 0
+        elif new_piece[1] == "D":
+            new_connections[1] = True
+            direction = 1
+        elif new_piece[1] == "B":
+            new_connections[2] = True
+            direction = 2
+        elif new_piece[1] == "E":
+            new_connections[3] = True
+            direction = 3
+        elif new_piece[1] == "H":
+            new_connections[1] = True
+            new_connections[3] = True
+        elif new_piece[1] == "V":
+            new_connections[0] = True
+            new_connections[2] = True
+            
+        if new_piece[0] == "B":
+            new_connections[(direction - 1) % 4] = True
+            new_connections[(direction + 1) % 4] = True
+        elif new_piece[0] == "V":
+            new_connections[(direction - 1) % 4] = True
+            
+        return new_connections
     
     def print_piece(self):
         return self.orientation + self.type
