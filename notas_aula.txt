@@ -12,5 +12,3 @@
 #classe PipeMania e a principal com as acoes da peca, e o que acontece em cada acao (transition model),
 
 # def h heuristica do projeto 
-
-# fazer board e parse_instance
