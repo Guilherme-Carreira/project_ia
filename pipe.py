@@ -28,6 +28,7 @@ class PipeManiaState:
     def __lt__(self, other):
         return self.id < other.id
 
+
 class Piece:
     def __init__(self, piece: str, row: int, col: int):
         self.type = piece[0]
@@ -36,57 +37,64 @@ class Piece:
         self.row = row
         self.col = col
         self.solved = False
-            
+    
+    """function that changes the orientation of the piece and updates the connections accordingly"""
     def change_orientation(self, new_piece: str):
         if new_piece[0] == self.type:
             self.connections = self.calculate_connections(new_piece)
             self.orientation = new_piece[1]
-            
+    
+    """function that updates the connections of the piece"""
     def calculate_connections(self, new_piece: str):
         new_connections = [False, False, False, False] # [CIMA, DIREITA, BAIXO, ESQUERDA]
-            
-        if new_piece[1] == "C":
+        
+        if new_piece[1] == "C": # orientacao CIMA
             new_connections[0] = True
             direction = 0
-        elif new_piece[1] == "D":
+        elif new_piece[1] == "D": # orientacao DIREITA
             new_connections[1] = True
             direction = 1
-        elif new_piece[1] == "B":
+        elif new_piece[1] == "B": # orientacao BAIXO
             new_connections[2] = True
             direction = 2
-        elif new_piece[1] == "E":
+        elif new_piece[1] == "E": # orientacao ESQUERDA
             new_connections[3] = True
             direction = 3
-        elif new_piece[1] == "H":
+        elif new_piece[1] == "H": # orientacao HORIZONTAL
             new_connections[1] = True
             new_connections[3] = True
-        elif new_piece[1] == "V":
+        elif new_piece[1] == "V": # orientacao VERTICAL
             new_connections[0] = True
             new_connections[2] = True
             
-        if new_piece[0] == "B":
-            new_connections[(direction - 1) % 4] = True
-            new_connections[(direction + 1) % 4] = True
-        elif new_piece[0] == "V":
+        if new_piece[0] == "B": # peca BIFURCACAO    
+            new_connections[(direction - 1) % 4] = True # direita - 1 fica CIMA
+            new_connections[(direction + 1) % 4] = True # direita + 1 fica BAIXO
+        elif new_piece[0] == "V": # peca VOLTA
             new_connections[(direction - 1) % 4] = True
             
         return new_connections
     
+    """function that checks if the piece is solved"""
     def is_solved(self):
         return self.solved
     
+    """functions that gets the connection"""
     def get_connection(self, index: int):
         return self.connections[index]
     
+    """shows the type of piece"""
     def print_piece(self):
         return self.type + self.orientation
-    
+
+
 class Board:
 
     def __init__(self, grid: list): # definir o grid como um tuplo
         self.grid = grid
         self.size = len(grid)
     
+    """"""
     def adjacent_vertical_values(self, row: int, col: int): # acima e abaixo
         if row == 0: # se for a primeira linha
           return (None, self.grid[row + 1][col])
@@ -95,6 +103,7 @@ class Board:
         else: # se for qualquer outra linha no meio
           return (self.grid[row - 1][col], self.grid[row + 1][col])
 
+    """"""
     def adjacent_horizontal_values(self, row: int, col: int): # esquerda e direita
         if col == 0:
             return (None, self.grid[row][col + 1])
@@ -102,7 +111,8 @@ class Board:
             return (self.grid[row][col - 1], None)
         else:
             return (self.grid[row][col - 1], self.grid[row][col + 1])
-        
+    
+    """"""
     def get_restrictions(self, piece: Piece):
         row = piece.row
         col = piece.col
@@ -142,8 +152,8 @@ class Board:
         elif left == None:
             restrictions[3] = False
         return restrictions
-        
-        
+
+    """"""
     def in_corner(self, piece: Piece):
         row = piece.row
         col = piece.col
@@ -161,6 +171,7 @@ class Board:
                 return "BR"
         return False
     
+    """"""
     def in_wall(self, piece: Piece):
         row = piece.row
         col = piece.col
@@ -175,8 +186,8 @@ class Board:
         elif bottom == None:
             return "B"
         return False
-    
-        
+
+    """"""
     def print_board(self):
         board = self.grid
         for i in range(0, self.size):
@@ -189,6 +200,7 @@ class Board:
         print('\n')
         return
 
+    """"""
     @staticmethod
     def parseinstance(): 
         grid = []
@@ -206,6 +218,7 @@ class Board:
             if not line:
                 break
         return Board(grid)
+
 
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
