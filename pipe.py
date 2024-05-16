@@ -17,7 +17,6 @@ from search import (
     recursive_best_first_search,
 )
 
-
 class PipeManiaState:
     state_id = 0
 
@@ -31,61 +30,28 @@ class PipeManiaState:
 
 class Piece:
     def __init__(self, piece: str, row: int, col: int):
+        self.type = piece[0]
+        self.orientation = piece[1]
         self.row = row
         self.col = col
-        if piece[0] == 'F':
-            self.type = "FINAL"
-        elif piece[0] == 'B':
-            self.type = "TRIPLE"
-        elif piece[0] == 'V':
-            self.type = "DOUBLE"
-        elif piece[0] == 'L':
-            self.type = "STRAIGHT"
-
-        if piece[1] == 'C':
-            self.orientation = "UP"
-        elif piece[1] == 'B':
-            self.orientation = "DOWN"
-        elif piece[1] == 'E':
-            self.orientation = "LEFT"
-        elif piece[1] == 'D':
-            self.orientation = "RIGHT"
-        elif piece[1] == 'H':
-            self.orientation = "HORIZONTAL"
-        elif piece[1] == 'V':
-            self.orientation = "VERTICAL"
-            
-    def get_type(self):
-        return self.type
+        self.solved = False
     
-    def get_orientation(self):
-        return self.orientation        
-            
-    def get_row(self):
-        return self.row
+    def print_piece(self):
+        return self.orientation + self.type
     
-    def get_column(self):
-        return self.col
-    
-    def visualize(self):
-        return self.orientation + ' ' + self.type
-    
-
 class Board:
 
-    def __init__(self, grid: tuple): # definir o grid como um tuplo
+    def __init__(self, grid: list): # definir o grid como um tuplo
         self.grid = grid
-      
-    def get_value(self, row: int, col: int):
-        return self.grid[row][col]
+        self.size = len(grid)
     
     def adjacent_vertical_values(self, row: int, col: int): # acima e abaixo
         if row == 0: # se for a primeira linha
-            return (None, self.grid[row + 1][col])
+          return (None, self.grid[row + 1][col])
         elif row == len(self.grid) - 1: # se for a ultima linha
             return (self.grid[row - 1][col], None)
         else: # se for qualquer outra linha no meio
-            return (self.grid[row - 1][col], self.grid[row + 1][col])
+          return (self.grid[row - 1][col], self.grid[row + 1][col])
 
     def adjacent_horizontal_values(self, row: int, col: int): # esquerda e direita
         if col == 0:
@@ -94,7 +60,51 @@ class Board:
             return (self.grid[row][col - 1], None)
         else:
             return (self.grid[row][col - 1], self.grid[row][col + 1])
-
+        
+    def in_corner(self, piece: Piece):
+        row = piece.row
+        col = piece.col
+        left, right = self.adjacent_horizontal_values(row, col)
+        top, bottom = self.adjacent_vertical_values(row, col)
+        if left == None:
+            if top == None:
+                return "TL"
+            elif bottom == None:
+                return "BL"
+        elif right == None:
+            if top == None:
+                return "TR"
+            elif bottom == None:
+                return "BR"
+        return False
+    
+    def in_wall(self, piece: Piece):
+        row = piece.row
+        col = piece.col
+        left, right = self.adjacent_horizontal_values(row, col)
+        top, bottom = self.adjacent_vertical_values(row, col)
+        if left == None:
+            return "L"
+        elif right == None:
+            return "R"
+        elif top == None:
+            return "T"
+        elif bottom == None:
+            return "B"
+        return False
+    
+        
+    def print_board(self):
+        board = self.grid
+        for i in range(0, self.size):
+            if (i != 0):
+               print('\n')
+            for j in range(0, self.size):
+                if (j != 0):
+                    print('\t', end = '')
+                print(board[i][j].print_piece(), end = '')
+        print('\n')
+        return
 
     @staticmethod
     def parseinstance(): 
@@ -114,12 +124,9 @@ class Board:
                 break
         return Board(grid)
 
-
 class PipeMania(Problem):
-    def __init__(self, board: Board):
-        """O construtor especifica o estado inicial."""
-        # TODO
-        pass
+    def __init__(self, state: PipeManiaState):
+        self.state = state
 
     def actions(self, state: PipeManiaState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -149,9 +156,10 @@ class PipeMania(Problem):
 
     # TODO: outros metodos da classe
 
-
 if __name__ == "__main__":
     # TODO:
+    board = Board.parseinstance()
+    board.print_board()
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
