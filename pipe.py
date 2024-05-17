@@ -6,6 +6,7 @@
 # 106492 Marcio Filipe Simoes
 # 106965 Joao Guilherme Carreira
 
+import copy
 import sys
 from search import (
     Problem,
@@ -36,7 +37,6 @@ class Piece:
         self.connections = self.calculate_connections(piece)
         self.row = row
         self.col = col
-        self.solved = False
         self.actions = []
             
     def change_orientation(self, new_piece: str):
@@ -77,11 +77,11 @@ class Piece:
     
     """function that checks if the piece is solved"""
     def is_solved(self):
-        return self.solved
+        if len(self.actions) == 0:
+            return True
+        else:
+            return False
     
-    """functions that gets the connection"""
-    def get_connection(self, index: int):
-        return self.connections[index]
     
     def number_actions(self):
         return len(self.actions)
@@ -125,7 +125,7 @@ class Board:
         
         if top != None:
             if top.is_solved():
-                restrictions[0] = left.get_connection(2)
+                restrictions[0] = left.connections[2]
             else:
                 restrictions[0] = False
         elif top == None:
@@ -133,7 +133,7 @@ class Board:
             
         if right != None:
             if right.is_solved():
-                restrictions[1] = left.get_connection(3)
+                restrictions[1] = left.connections[3]
             else:
                 restrictions[1] = False
         elif right == None:
@@ -141,7 +141,7 @@ class Board:
             
         if bottom != None:
             if bottom.is_solved():
-                restrictions[2] = left.get_connection(0)
+                restrictions[2] = left.connections[0]
             else:
                 restrictions[2] = False
         elif bottom == None:
@@ -149,7 +149,7 @@ class Board:
             
         if left != None:
             if left.is_solved():
-                restrictions[3] = left.get_connection(1)
+                restrictions[3] = left.connections[1]
             else:
                 restrictions[3] = False
         elif left == None:
@@ -224,6 +224,7 @@ class Board:
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
         self.state = state
+        self.next_piece = None
 
     def actions(self, state: PipeManiaState):
         board = state.board
@@ -458,15 +459,38 @@ class PipeMania(Problem):
                             
                 print(piece.actions, ":", piece.number_actions())
 
-                    
+    def find_next_piece(self, state: PipeManiaState):
+        grid = state.board.grid
+        next = grid[0][0]
+        for line in grid:
+            for piece in line:
+                if len(piece.actions) < len(next.actions):
+                    next = piece
+        state.next_piece = next
+        
+    def restrict_after_result(self, state: PipeManiaState):
+        left, right = state.board.adjacent_horizontal_values(self.next_piece.row, self.next_piece.col)
+        top, bottom = state.board.adjacent_vertical_values(self.next_piece.row, self.next_piece.col)
+        
+        if left != None:
+            pass
+        if right != None:
+            pass
+        if top != None:
+            pass
+        if bottom != None:
+            pass
+        
+        
+                     
 
-    def result(self, state: PipeManiaState, action):
-        """Retorna o estado resultante de executar a 'action' sobre
-        'state' passado como argumento. A ação a executar deve ser uma
-        das presentes na lista obtida pela execução de
-        self.actions(state)."""
-        # TODO
-        pass
+    def result(self, state: PipeManiaState, action: list):
+        board = state.board
+        new_board = copy.deepcopy(board)
+        grid = new_board.grid
+        grid[action[1]][action[2]].change_orientation(action[0])
+        new_state = PipeManiaState(new_board)
+        return new_state
 
     def goal_test(self, state: PipeManiaState):
         board = state.board
@@ -477,21 +501,21 @@ class PipeMania(Problem):
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
                 top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                 if top != None:
-                    adjacent_connections[0] = top.get_connection(2)
+                    adjacent_connections[0] = top.connections[2]
                 if right != None:
-                    adjacent_connections[1] = right.get_connection(3)
+                    adjacent_connections[1] = right.connections[3]
                 if bottom != None:
-                    adjacent_connections[2] = bottom.get_connection(0)
+                    adjacent_connections[2] = bottom.connections[0]
                 if left != None:
-                    adjacent_connections[3] = left.get_connection(1)
+                    adjacent_connections[3] = left.connections[1]
                 
-                if piece.get_connection(0) != adjacent_connections[0] and (piece.get_connection(0) != False or adjacent_connections[0] != None):
+                if piece.connections[0] != adjacent_connections[0] and (piece.connections[0] != False or adjacent_connections[0] != None):
                     return False
-                if piece.get_connection(1) != adjacent_connections[1] and (piece.get_connection(1) != False or adjacent_connections[1] != None):
+                if piece.connections[1] != adjacent_connections[1] and (piece.connections[1] != False or adjacent_connections[1] != None):
                     return False
-                if piece.get_connection(2) != adjacent_connections[2] and (piece.get_connection(2) != False or adjacent_connections[2] != None):
+                if piece.connections[2] != adjacent_connections[2] and (piece.connections[2] != False or adjacent_connections[2] != None):
                     return False
-                if piece.get_connection(3) != adjacent_connections[3] and (piece.get_connection(3) != False or adjacent_connections[3] != None):
+                if piece.connections[3] != adjacent_connections[3] and (piece.connections[3] != False or adjacent_connections[3] != None):
                     return False
                 
         return True
