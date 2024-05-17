@@ -83,6 +83,9 @@ class Piece:
     def get_connection(self, index: int):
         return self.connections[index]
     
+    def number_actions(self):
+        return len(self.actions)
+    
     """shows the type of piece"""
     def print_piece(self):
         print(self.type + self.orientation)
@@ -228,12 +231,11 @@ class PipeMania(Problem):
         for row in grid:
             for piece in row:
                 corner = board.in_corner(piece)
+                wall = board.in_wall(piece)
                 if corner != False:
                     if corner == "CE":
                         if piece.type == "V":
-                            if piece.orientation == "B":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "B":
                                 piece.actions.append(["VB", piece.row, piece.col])
                         elif piece.type == "F":
                             if piece.orientation == "B":
@@ -245,9 +247,7 @@ class PipeMania(Problem):
                                 piece.actions.append(["FD", piece.row, piece.col])
                     elif corner == "CD":
                         if piece.type == "V":
-                            if piece.orientation == "E":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "E":
                                 piece.actions.append(["VE", piece.row, piece.col])
                         elif piece.type == "F":
                             if piece.orientation == "E":
@@ -259,9 +259,7 @@ class PipeMania(Problem):
                                 piece.actions.append(["FB", piece.row, piece.col])
                     elif corner == "BE":
                         if piece.type == "V":
-                            if piece.orientation == "D":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "D":
                                 piece.actions.append(["VD", piece.row, piece.col])
                         elif piece.type == "F":
                             if piece.orientation == "C":
@@ -273,9 +271,7 @@ class PipeMania(Problem):
                                 piece.actions.append(["FD", piece.row, piece.col])
                     elif corner == "BD":
                         if piece.type == "V":
-                            if piece.orientation == "C":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "C":
                                 piece.actions.append(["VC", piece.row, piece.col])
                         elif piece.type == "F":
                             if piece.orientation == "C":
@@ -286,7 +282,6 @@ class PipeMania(Problem):
                                 piece.actions.append(["FC", piece.row, piece.col])
                                 piece.actions.append(["FE", piece.row, piece.col])
                             
-                wall = board.in_wall(piece)
                 if wall != False and corner == False:
                     if piece.type == "F":
                         if wall == "E":
@@ -347,24 +342,16 @@ class PipeMania(Problem):
                                 piece.actions.append(["FD", piece.row, piece.col])
                     elif piece.type == "B":
                         if wall == "E":
-                            if piece.orientation == "D":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "D":
                                 piece.actions.append(["BD", piece.row, piece.col])
                         elif wall == "D":
-                            if piece.orientation == "E":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "E":
                                 piece.actions.append(["BE", piece.row, piece.col])
                         elif wall == "C":                         
-                            if piece.orientation == "B":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "B":
                                 piece.actions.append(["BB", piece.row, piece.col])
                         elif wall == "B":
-                            if piece.orientation == "C":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "C":
                                 piece.actions.append(["BC", piece.row, piece.col])
                     elif piece.type == "V":
                         if wall == "E":
@@ -401,14 +388,10 @@ class PipeMania(Problem):
                                 piece.actions.append(["VD", piece.row, piece.col])
                     elif piece.type == "L":
                         if wall == "E" or wall == "D":
-                            if piece.orientation == "V":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "V":
                                 piece.actions.append(["LV", piece.row, piece.col])
                         elif wall == "C" or wall == "B":
-                            if piece.orientation == "H":
-                                piece.actions.append([])
-                            else:
+                            if piece.orientation != "H":
                                 piece.actions.append(["LH", piece.row, piece.col])
                     
                 if corner == False and wall == False:
@@ -473,10 +456,7 @@ class PipeMania(Problem):
                         if ["FD", piece.row, piece.col] in piece.actions:
                             piece.actions.remove(["FD", piece.row, piece.col])
                             
-                if len(piece.actions) == 0:
-                    piece.actions.append([])  
-                            
-                print(piece.actions)
+                print(piece.actions, ":", piece.number_actions())
 
                     
 
