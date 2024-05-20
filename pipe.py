@@ -184,6 +184,10 @@ class PipeMania(Problem):
 
     def actions(self, state: PipeManiaState):
         board = state.board
+        if state.state_id <= 10:
+            print("State", state.state_id)
+            board.print_board()
+            print("\n")
         grid = board.grid
         return_actions = []
         for row in grid:
@@ -265,8 +269,7 @@ class PipeMania(Problem):
                             elif piece.config[0] == "L":
                                 piece_actions.append(["LH", piece.row, piece.col])
                             elif piece.config[0] == "B":
-                                piece_actions.append(["Bc", piece.row, piece.col])
-                                
+                                piece_actions.append(["Bc", piece.row, piece.col])    
                     if corner == False and wall == False:
                         if piece.config[0] == "F":
                             piece_actions.append(["FC", piece.row, piece.col])
@@ -286,9 +289,6 @@ class PipeMania(Problem):
                         elif piece.config[0] == "L":
                             piece_actions.append(["LH", piece.row, piece.col])
                             piece_actions.append(["LV", piece.row, piece.col])
-                                
-                    if [piece.config, piece.row, piece.col] in piece_actions:
-                        piece_actions.remove([piece.config, piece.row, piece.col])
                         
                     left, right = board.adjacent_horizontal_values(piece.row, piece.col)
                     top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
@@ -296,50 +296,71 @@ class PipeMania(Problem):
                     if top != None:
                         if top.solved:
                             if top.connects_bottom(top.config):
-                                for element in piece_actions:
-                                    if not top.connects_top(element[0]):
-                                        piece_actions.remove(element)
+                                if piece.config[0] == "F":
+                                    piece_actions = [["FC", piece.row, piece.col]]
+                                else:
+                                    for element in piece_actions[:]:
+                                        if not top.connects_top(element[0]):
+                                            piece_actions.remove(element)
                             else:
-                                for element in piece_actions:
+                                for element in piece_actions[:]:
                                     if top.connects_top(element[0]):
                                         piece_actions.remove(element)
-                        
-                            
+                        if piece.config[0] == "F" and top.config[0] == "F":
+                            if ["FC", piece.row, piece.col] in piece_actions:
+                                piece_actions.remove(["FC", piece.row, piece.col])
                     if bottom != None:
                         if bottom.solved:
                             if bottom.connects_top(bottom.config):
-                                for element in piece_actions:
-                                    if not bottom.connects_bottom(element[0]):
-                                        piece_actions.remove(element)
+                                if piece.config[0] == "F":
+                                    piece_actions = [["FB", piece.row, piece.col]]
+                                else:
+                                    for element in piece_actions[:]:
+                                        if not bottom.connects_bottom(element[0]):
+                                            piece_actions.remove(element)
                             else:
-                                for element in piece_actions:
+                                for element in piece_actions[:]:
                                     if bottom.connects_bottom(element[0]):
-                                        piece_actions.remove(element)
-                            
+                                        piece_actions.remove(element)  
+                        if piece.config[0] == "F" and bottom.config[0] == "F":
+                            if ["FB", piece.row, piece.col] in piece_actions:
+                                piece_actions.remove(["FB", piece.row, piece.col]) 
                     if left != None:
                         if left.solved:
                             if left.connects_right(left.config):
-                                for element in piece_actions:
-                                    if not left.connects_left(element[0]):
-                                        piece_actions.remove(element)
+                                if piece.config[0] == "F":
+                                    piece_actions = [["FE", piece.row, piece.col]]
+                                else:
+                                    for element in piece_actions[:]:
+                                        if not left.connects_left(element[0]):
+                                            piece_actions.remove(element)
                             else:
-                                for element in piece_actions:
+                                for element in piece_actions[:]:
                                     if left.connects_left(element[0]):
                                         piece_actions.remove(element)
-                            
+                        if piece.config[0] == "F" and left.config[0] == "F":
+                            if ["FE", piece.row, piece.col] in piece_actions:
+                                piece_actions.remove(["FE", piece.row, piece.col]) 
                     if right != None:
                         if right.solved:
                             if right.connects_left(right.config):
-                                for element in piece_actions:
-                                    if not right.connects_right(element[0]):
-                                        piece_actions.remove(element)
+                                if piece.config[0] == "F":
+                                    piece_actions = [["FD", piece.row, piece.col]]
+                                else:
+                                    for element in piece_actions[:]:
+                                        if not right.connects_right(element[0]):
+                                            piece_actions.remove(element)
                             else:
-                                for element in piece_actions:
+                                for element in piece_actions[:]:
                                     if right.connects_right(element[0]):
                                         piece_actions.remove(element)
+                        if piece.config[0] == "F" and right.config[0] == "F" and piece.config != "FD":
+                            if ["FD", piece.row, piece.col] in piece_actions:
+                                piece_actions.remove(["FD", piece.row, piece.col]) 
 
                     if len(piece_actions) == 1:
-                        return_actions.append(piece_actions[0])
+                        if piece_actions[0][0] != piece.config:
+                            return_actions.append(piece_actions[0])
         return [return_actions]
                                           
     def result(self, state: PipeManiaState, actions: list):
