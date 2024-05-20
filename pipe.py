@@ -39,25 +39,25 @@ class Piece:
             
     def change_orientation(self, new_piece: str):
         if new_piece[0] == self.config[0]:
-            self.config[1] = new_piece[1]
+            self.config = new_piece
             
-    def connects_top(self):
-        if self.config in ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]:
+    def connects_top(self, config: str):
+        if config in ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]:
             return True
         return False
     
-    def connects_bottom(self):
-        if self.config in ["FB", "BB", "BE", "BD", "VB", "VE", "LV"]:
+    def connects_bottom(self, config: str):
+        if config in ["FB", "BB", "BE", "BD", "VB", "VE", "LV"]:
             return True
         return False
     
-    def connects_left(self):
-        if self.config in ["FE", "BC", "BB", "BE", "VC", "VE", "LH"]:
+    def connects_left(self, config: str):
+        if config in ["FE", "BC", "BB", "BE", "VC", "VE", "LH"]:
             return True
         return False
     
-    def connects_right(self):
-        if self.config in ["FD", "BC", "BB", "BD", "VB", "VD", "LH"]:
+    def connects_right(self, config: str):
+        if config in ["FD", "BC", "BB", "BD", "VB", "VD", "LH"]:
             return True
         return False
     
@@ -96,22 +96,22 @@ class Board:
         size = len(grid)
         if grid[0][0].config == "VB": # TOP LEFT CORNER
             grid[0][0].solved = True
-        if grid[0][size].config == "VE": # TOP RIGHT CORNER
-            grid[0][size].solved = True
-        if grid[size][0].config == "VD": # BOTTOM LEFT CORNER
-            grid[size][0].solved = True
-        if grid[size][size].config == "VC": # BOTTOM RIGHT CORNER
-            grid[size][size].solved = True
+        if grid[0][size-1].config == "VE": # TOP RIGHT CORNER
+            grid[0][size-1].solved = True
+        if grid[size-1][0].config == "VD": # BOTTOM LEFT CORNER
+            grid[size-1][0].solved = True
+        if grid[size-1][size-1].config == "VC": # BOTTOM RIGHT CORNER
+            grid[size-1][size-1].solved = True
             
         for i in range(1, size - 1):
             if grid[0][i].config == "LH" or grid[0][i].config == "BB": # TOP WALL
                 grid[0][i].solved = True
-            if grid[size][i].config == "LH" or grid[size][i].config == "BC": # BOTTOM WALL
-                grid[size][i].solved = True
+            if grid[size-1][i].config == "LH" or grid[size-1][i].config == "BC": # BOTTOM WALL
+                grid[size-1][i].solved = True
             if grid[i][0].config == "LV" or grid[i][0].config == "BD": # LEFT WALL
                 grid[i][0].solved = True
-            if grid[i][size].config == "LV" or grid[i][size].config == "BE": # RIGHT WALL
-                grid[i][size].solved = True
+            if grid[i][size-1].config == "LV" or grid[i][size-1].config == "BE": # RIGHT WALL
+                grid[i][size-1].solved = True
 
     """"""
     def in_corner(self, piece: Piece):
@@ -179,12 +179,13 @@ class Board:
 
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
-        self.state = state
+        self.initial = state
         self.next_piece = None                    
 
     def actions(self, state: PipeManiaState):
         board = state.board
         grid = board.grid
+        return_actions = []
         for row in grid:
             for piece in row:
                 if not piece.solved:
@@ -196,18 +197,26 @@ class PipeMania(Problem):
                             if piece.config[0] == "F":
                                 piece_actions.append(["FB", piece.row, piece.col])
                                 piece_actions.append(["FD", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VB", piece.row, piece.col])
                         elif corner == "CD":
                             if piece.config[0] == "F":
                                 piece_actions.append(["FB", piece.row, piece.col])
                                 piece_actions.append(["FE", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VE", piece.row, piece.col])
                         elif corner == "BE":
                             if piece.config[0] == "F":
                                 piece_actions.append(["FC", piece.row, piece.col])
                                 piece_actions.append(["FD", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VD", piece.row, piece.col])
                         elif corner == "BD":
                             if piece.config[0] == "F":
                                 piece_actions.append(["FC", piece.row, piece.col])
                                 piece_actions.append(["FE", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VC", piece.row, piece.col])
                     if wall != False and corner == False:
                         if wall == "E":
                             if piece.config[0] == "F":
@@ -217,40 +226,130 @@ class PipeMania(Problem):
                             elif piece.config[0] == "V":
                                 piece_actions.append(["VD", piece.row, piece.col])
                                 piece_actions.append(["VB", piece.row, piece.col])
+                            elif piece.config[0] == "L":
+                                piece_actions.append(["LV", piece.row, piece.col])
+                            elif piece.config[0] == "B":
+                                piece_actions.append(["BD", piece.row, piece.col])
                         if wall == "D":
                             if piece.config[0] == "F":
                                 piece_actions.append(["FC", piece.row, piece.col])
-                                piece_actions.append(["FD", piece.row, piece.col])
                                 piece_actions.append(["FB", piece.row, piece.col])
+                                piece_actions.append(["FE", piece.row, piece.col])
                             elif piece.config[0] == "V":
-                                piece_actions.append(["VD", piece.row, piece.col])
-                                piece_actions.append(["VB", piece.row, piece.col])
+                                piece_actions.append(["VC", piece.row, piece.col])
+                                piece_actions.append(["VE", piece.row, piece.col])
+                            elif piece.config[0] == "L":
+                                piece_actions.append(["LV", piece.row, piece.col])
+                            elif piece.config[0] == "B":
+                                piece_actions.append(["BE", piece.row, piece.col])
                         if wall == "C":
                             if piece.config[0] == "F":
-                                piece_actions.append(["FC", piece.row, piece.col])
-                                piece_actions.append(["FD", piece.row, piece.col])
+                                piece_actions.append(["FE", piece.row, piece.col])
                                 piece_actions.append(["FB", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
                             elif piece.config[0] == "V":
-                                piece_actions.append(["VD", piece.row, piece.col])
                                 piece_actions.append(["VB", piece.row, piece.col])
+                                piece_actions.append(["VE", piece.row, piece.col])
+                            elif piece.config[0] == "L":
+                                piece_actions.append(["LH", piece.row, piece.col])
+                            elif piece.config[0] == "B":
+                                piece_actions.append(["BB", piece.row, piece.col])
                         if wall == "B":
                             if piece.config[0] == "F":
                                 piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FE", piece.row, piece.col])
                                 piece_actions.append(["FD", piece.row, piece.col])
-                                piece_actions.append(["FB", piece.row, piece.col])
                             elif piece.config[0] == "V":
+                                piece_actions.append(["VC", piece.row, piece.col])
                                 piece_actions.append(["VD", piece.row, piece.col])
-                                piece_actions.append(["VB", piece.row, piece.col])
+                            elif piece.config[0] == "L":
+                                piece_actions.append(["LH", piece.row, piece.col])
+                            elif piece.config[0] == "B":
+                                piece_actions.append(["Bc", piece.row, piece.col])
                                 
-                            
+                    if corner == False and wall == False:
+                        if piece.config[0] == "F":
+                            piece_actions.append(["FC", piece.row, piece.col])
+                            piece_actions.append(["FD", piece.row, piece.col])
+                            piece_actions.append(["FB", piece.row, piece.col])
+                            piece_actions.append(["FE", piece.row, piece.col])
+                        elif piece.config[0] == "B":
+                            piece_actions.append(["BC", piece.row, piece.col])
+                            piece_actions.append(["BD", piece.row, piece.col])
+                            piece_actions.append(["BB", piece.row, piece.col])
+                            piece_actions.append(["BE", piece.row, piece.col])
+                        elif piece.config[0] == "V":
+                            piece_actions.append(["VC", piece.row, piece.col])
+                            piece_actions.append(["VD", piece.row, piece.col])
+                            piece_actions.append(["VB", piece.row, piece.col])
+                            piece_actions.append(["VE", piece.row, piece.col])
+                        elif piece.config[0] == "L":
+                            piece_actions.append(["LH", piece.row, piece.col])
+                            piece_actions.append(["LV", piece.row, piece.col])
                                 
+                    if [piece.config, piece.row, piece.col] in piece_actions:
+                        piece_actions.remove([piece.config, piece.row, piece.col])
+                        
+                    left, right = board.adjacent_horizontal_values(piece.row, piece.col)
+                    top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                     
-              
-    def result(self, state: PipeManiaState, action: list):
+                    if top != None:
+                        if top.solved:
+                            if top.connects_bottom(top.config):
+                                for element in piece_actions:
+                                    if not top.connects_top(element[0]):
+                                        piece_actions.remove(element)
+                            else:
+                                for element in piece_actions:
+                                    if top.connects_top(element[0]):
+                                        piece_actions.remove(element)
+                        
+                            
+                    if bottom != None:
+                        if bottom.solved:
+                            if bottom.connects_top(bottom.config):
+                                for element in piece_actions:
+                                    if not bottom.connects_bottom(element[0]):
+                                        piece_actions.remove(element)
+                            else:
+                                for element in piece_actions:
+                                    if bottom.connects_bottom(element[0]):
+                                        piece_actions.remove(element)
+                            
+                    if left != None:
+                        if left.solved:
+                            if left.connects_right(left.config):
+                                for element in piece_actions:
+                                    if not left.connects_left(element[0]):
+                                        piece_actions.remove(element)
+                            else:
+                                for element in piece_actions:
+                                    if left.connects_left(element[0]):
+                                        piece_actions.remove(element)
+                            
+                    if right != None:
+                        if right.solved:
+                            if right.connects_left(right.config):
+                                for element in piece_actions:
+                                    if not right.connects_right(element[0]):
+                                        piece_actions.remove(element)
+                            else:
+                                for element in piece_actions:
+                                    if right.connects_right(element[0]):
+                                        piece_actions.remove(element)
+
+                    if len(piece_actions) == 1:
+                        return_actions.append(piece_actions[0])
+        return [return_actions]
+                                          
+    def result(self, state: PipeManiaState, actions: list):
         board = state.board
         new_board = copy.deepcopy(board)
         grid = new_board.grid
-        grid[action[1]][action[2]].change_orientation(action[0])
+        for action in actions:
+            piece = grid[action[1]][action[2]]
+            piece.change_orientation(action[0])
+            piece.solved = True
         new_state = PipeManiaState(new_board)
         return new_state
 
@@ -262,13 +361,13 @@ class PipeMania(Problem):
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
                 top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                 
-                if (top == None and piece.connects_top()) or (top != None and (top.connects_bottom() != piece.connects_top())):
+                if (top == None and piece.connects_top(piece.config)) or (top != None and (top.connects_bottom(top.config) != piece.connects_top(piece.config))):
                     return False
-                if (bottom == None and piece.connects_bottom()) or (bottom != None and (bottom.connects_top() != piece.connects_bottom())):
+                if (bottom == None and piece.connects_bottom(piece.config)) or (bottom != None and (bottom.connects_top(bottom.config) != piece.connects_bottom(piece.config))):
                     return False
-                if (left == None and piece.connects_left()) or (left != None and (left.connects_right() != piece.connects_left())):
+                if (left == None and piece.connects_left(piece.config)) or (left != None and (left.connects_right(left.config) != piece.connects_left(piece.config))):
                     return False
-                if (right == None and piece.connects_right()) or (right != None and (right.connects_left() != piece.connects_right())):
+                if (right == None and piece.connects_right(piece.config)) or (right != None and (right.connects_left(right.config) != piece.connects_right(piece.config))):
                     return False
                       
         return True
@@ -280,12 +379,14 @@ class PipeMania(Problem):
 
 
 if __name__ == "__main__":
-    # TODO:
     board = Board.parseinstance()
     board.pre_process()
     state = PipeManiaState(board)
     pipemania = PipeMania(state)
-    print(pipemania.goal_test(state))
+    goal = depth_first_tree_search(pipemania)
+    solved_board = goal.state.board
+    solved_board.print_board()
+    # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
