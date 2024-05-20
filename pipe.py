@@ -32,63 +32,38 @@ class PipeManiaState:
 
 class Piece:
     def __init__(self, piece: str, row: int, col: int):
-        self.type = piece[0]
-        self.orientation = piece[1]
-        self.connections = self.calculate_connections(piece)
+        self.config = piece # CONFIGURACAO DA PECA
         self.row = row
         self.col = col
-        self.actions = []
+        self.solved = False
             
     def change_orientation(self, new_piece: str):
-        if new_piece[0] == self.type:
-            self.connections = self.calculate_connections(new_piece)
-            self.orientation = new_piece[1]
-    
-    """function that updates the connections of the piece"""
-    def calculate_connections(self, new_piece: str):
-        new_connections = [False, False, False, False] # [CIMA, DIREITA, BAIXO, ESQUERDA]
-        
-        if new_piece[1] == "C": # orientacao CIMA
-            new_connections[0] = True
-            direction = 0
-        elif new_piece[1] == "D": # orientacao DIREITA
-            new_connections[1] = True
-            direction = 1
-        elif new_piece[1] == "B": # orientacao BAIXO
-            new_connections[2] = True
-            direction = 2
-        elif new_piece[1] == "E": # orientacao ESQUERDA
-            new_connections[3] = True
-            direction = 3
-        elif new_piece[1] == "H": # orientacao HORIZONTAL
-            new_connections[1] = True
-            new_connections[3] = True
-        elif new_piece[1] == "V": # orientacao VERTICAL
-            new_connections[0] = True
-            new_connections[2] = True
+        if new_piece[0] == self.config[0]:
+            self.config[1] = new_piece[1]
             
-        if new_piece[0] == "B": # peca BIFURCACAO    
-            new_connections[(direction - 1) % 4] = True # direita - 1 fica CIMA
-            new_connections[(direction + 1) % 4] = True # direita + 1 fica BAIXO
-        elif new_piece[0] == "V": # peca VOLTA
-            new_connections[(direction - 1) % 4] = True
-            
-        return new_connections
-    
-    """function that checks if the piece is solved"""
-    def is_solved(self):
-        if len(self.actions) == 0:
+    def connects_top(self):
+        if self.config in ["FC", "BC", "BE", "BD", "VC", "VD", "LV"]:
             return True
-        else:
-            return False
+        return False
     
+    def connects_bottom(self):
+        if self.config in ["FB", "BB", "BE", "BD", "VB", "VE", "LV"]:
+            return True
+        return False
     
-    def number_actions(self):
-        return len(self.actions)
+    def connects_left(self):
+        if self.config in ["FE", "BC", "BB", "BE", "VC", "VE", "LH"]:
+            return True
+        return False
+    
+    def connects_right(self):
+        if self.config in ["FD", "BC", "BB", "BD", "VB", "VD", "LH"]:
+            return True
+        return False
     
     """shows the type of piece"""
-    def print_piece(self):
-        print(self.type + self.orientation)
+    def get_piece(self):
+        return self.config
 
 
 class Board:
@@ -114,47 +89,29 @@ class Board:
             return (self.grid[row][col - 1], None)
         else:
             return (self.grid[row][col - 1], self.grid[row][col + 1])
-    
-    """"""
-    def get_restrictions(self, piece: Piece):
-        row = piece.row
-        col = piece.col
-        left, right = self.adjacent_horizontal_values(row, col)
-        top, bottom = self.adjacent_vertical_values(row, col)
-        restrictions = [None, None, None, None]
         
-        if top != None:
-            if top.is_solved():
-                restrictions[0] = left.connections[2]
-            else:
-                restrictions[0] = False
-        elif top == None:
-            restrictions[0] = False
+    """"""    
+    def pre_process(self):
+        grid = board.grid
+        size = len(grid)
+        if grid[0][0].config == "VB": # TOP LEFT CORNER
+            grid[0][0].solved = True
+        if grid[0][size].config == "VE": # TOP RIGHT CORNER
+            grid[0][size].solved = True
+        if grid[size][0].config == "VD": # BOTTOM LEFT CORNER
+            grid[size][0].solved = True
+        if grid[size][size].config == "VC": # BOTTOM RIGHT CORNER
+            grid[size][size].solved = True
             
-        if right != None:
-            if right.is_solved():
-                restrictions[1] = left.connections[3]
-            else:
-                restrictions[1] = False
-        elif right == None:
-            restrictions[1] = False
-            
-        if bottom != None:
-            if bottom.is_solved():
-                restrictions[2] = left.connections[0]
-            else:
-                restrictions[2] = False
-        elif bottom == None:
-            restrictions[2] = False
-            
-        if left != None:
-            if left.is_solved():
-                restrictions[3] = left.connections[1]
-            else:
-                restrictions[3] = False
-        elif left == None:
-            restrictions[3] = False
-        return restrictions
+        for i in range(1, size - 1):
+            if grid[0][i].config == "LH" or grid[0][i].config == "BB": # TOP WALL
+                grid[0][i].solved = True
+            if grid[size][i].config == "LH" or grid[size][i].config == "BC": # BOTTOM WALL
+                grid[size][i].solved = True
+            if grid[i][0].config == "LV" or grid[i][0].config == "BD": # LEFT WALL
+                grid[i][0].solved = True
+            if grid[i][size].config == "LV" or grid[i][size].config == "BE": # RIGHT WALL
+                grid[i][size].solved = True
 
     """"""
     def in_corner(self, piece: Piece):
@@ -192,14 +149,13 @@ class Board:
 
     """"""
     def print_board(self):
-        board = self.grid
-        for i in range(0, self.size):
+        for i in range(self.size):
             if (i != 0):
-               print('\n')
-            for j in range(0, self.size):
+                print('\n')
+            for j in range(self.size):
                 if (j != 0):
                     print('\t', end = '')
-                print(board[i][j].print_piece(), end = '')
+                print(self.grid[i][j].get_piece(), end = '')
 
     """"""
     @staticmethod
@@ -208,7 +164,9 @@ class Board:
         row = 0
         col = 0
         for line in sys.stdin: # le do stdin e o line e cada linha 
-            current_line = line.strip().split() # strip() remove \n e \t do tuplo e split() divide 
+            current_line = line.strip().split('\t') # strip() remove \n e \t do tuplo e split() divide 
+            if not current_line:
+                break
             row_pieces = []
             for piece in current_line:
                 row_pieces.append(Piece(piece, row, col))
@@ -216,274 +174,78 @@ class Board:
             grid.append(row_pieces)
             row += 1
             col = 0
-            if not line:
-                break
         return Board(grid)
 
 
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
         self.state = state
-        self.next_piece = None
+        self.next_piece = None                    
 
     def actions(self, state: PipeManiaState):
         board = state.board
         grid = board.grid
         for row in grid:
             for piece in row:
-                corner = board.in_corner(piece)
-                wall = board.in_wall(piece)
-                if corner != False:
-                    if corner == "CE":
-                        if piece.type == "V":
-                            if piece.orientation != "B":
-                                piece.actions.append(["VB", piece.row, piece.col])
-                        elif piece.type == "F":
-                            if piece.orientation == "B":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                            elif piece.orientation == "D":
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FB", piece.row, piece.col])
-                                piece.actions.append(["FD", piece.row, piece.col])
-                    elif corner == "CD":
-                        if piece.type == "V":
-                            if piece.orientation != "E":
-                                piece.actions.append(["VE", piece.row, piece.col])
-                        elif piece.type == "F":
-                            if piece.orientation == "E":
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "B":
-                                piece.actions.append(["FE", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                    elif corner == "BE":
-                        if piece.type == "V":
-                            if piece.orientation != "D":
-                                piece.actions.append(["VD", piece.row, piece.col])
-                        elif piece.type == "F":
-                            if piece.orientation == "C":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                            elif piece.orientation == "D":
-                                piece.actions.append(["FC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FD", piece.row, piece.col])
-                    elif corner == "BD":
-                        if piece.type == "V":
-                            if piece.orientation != "C":
-                                piece.actions.append(["VC", piece.row, piece.col])
-                        elif piece.type == "F":
-                            if piece.orientation == "C":
-                                piece.actions.append(["FE", piece.row, piece.col])
-                            elif piece.orientation == "E":
-                                piece.actions.append(["FC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FE", piece.row, piece.col])
+                if not piece.solved:
+                    piece_actions = []
+                    corner = board.in_corner(piece)
+                    wall = board.in_wall(piece)
+                    if corner != False:
+                        if corner == "CE":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FB", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                        elif corner == "CD":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FB", piece.row, piece.col])
+                                piece_actions.append(["FE", piece.row, piece.col])
+                        elif corner == "BE":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                        elif corner == "BD":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FE", piece.row, piece.col])
+                    if wall != False and corner == False:
+                        if wall == "E":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                                piece_actions.append(["FB", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VD", piece.row, piece.col])
+                                piece_actions.append(["VB", piece.row, piece.col])
+                        if wall == "D":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                                piece_actions.append(["FB", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VD", piece.row, piece.col])
+                                piece_actions.append(["VB", piece.row, piece.col])
+                        if wall == "C":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                                piece_actions.append(["FB", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VD", piece.row, piece.col])
+                                piece_actions.append(["VB", piece.row, piece.col])
+                        if wall == "B":
+                            if piece.config[0] == "F":
+                                piece_actions.append(["FC", piece.row, piece.col])
+                                piece_actions.append(["FD", piece.row, piece.col])
+                                piece_actions.append(["FB", piece.row, piece.col])
+                            elif piece.config[0] == "V":
+                                piece_actions.append(["VD", piece.row, piece.col])
+                                piece_actions.append(["VB", piece.row, piece.col])
+                                
                             
-                if wall != False and corner == False:
-                    if piece.type == "F":
-                        if wall == "E":
-                            if piece.orientation == "D":
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "C":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "B":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                                piece.actions.append(["FC", piece.row, piece.col])
-                        elif wall == "D":
-                            if piece.orientation == "E":
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "C":
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "B":
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                        elif wall == "C":                         
-                            if piece.orientation == "D":
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "E":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                            elif piece.orientation == "B":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FE", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FB", piece.row, piece.col])
-                                piece.actions.append(["FD", piece.row, piece.col])
-                        elif wall == "B":
-                            if piece.orientation == "D":
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FE", piece.row, piece.col])
-                            elif piece.orientation == "C":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FE", piece.row, piece.col])
-                            elif piece.orientation == "E":
-                                piece.actions.append(["FD", piece.row, piece.col])
-                                piece.actions.append(["FC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["FE", piece.row, piece.col])
-                                piece.actions.append(["FC", piece.row, piece.col])
-                                piece.actions.append(["FD", piece.row, piece.col])
-                    elif piece.type == "B":
-                        if wall == "E":
-                            if piece.orientation != "D":
-                                piece.actions.append(["BD", piece.row, piece.col])
-                        elif wall == "D":
-                            if piece.orientation != "E":
-                                piece.actions.append(["BE", piece.row, piece.col])
-                        elif wall == "C":                         
-                            if piece.orientation != "B":
-                                piece.actions.append(["BB", piece.row, piece.col])
-                        elif wall == "B":
-                            if piece.orientation != "C":
-                                piece.actions.append(["BC", piece.row, piece.col])
-                    elif piece.type == "V":
-                        if wall == "E":
-                            if piece.orientation == "B":
-                                piece.actions.append(["VD", piece.row, piece.col])
-                            elif piece.orientation == "D":
-                                piece.actions.append(["VB", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["VD", piece.row, piece.col])
-                                piece.actions.append(["VB", piece.row, piece.col])
-                        elif wall == "D":
-                            if piece.orientation == "C":
-                                piece.actions.append(["VE", piece.row, piece.col])
-                            elif piece.orientation == "E":
-                                piece.actions.append(["VC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["VC", piece.row, piece.col])
-                                piece.actions.append(["VE", piece.row, piece.col])
-                        elif wall == "C":                         
-                            if piece.orientation == "B":
-                                piece.actions.append(["VE", piece.row, piece.col])
-                            elif piece.orientation == "E":
-                                piece.actions.append(["VB", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["VB", piece.row, piece.col])
-                                piece.actions.append(["VE", piece.row, piece.col])
-                        elif wall == "B":
-                            if piece.orientation == "C":
-                                piece.actions.append(["VD", piece.row, piece.col])
-                            elif piece.orientation == "D":
-                                piece.actions.append(["VC", piece.row, piece.col])
-                            else:
-                                piece.actions.append(["VC", piece.row, piece.col])
-                                piece.actions.append(["VD", piece.row, piece.col])
-                    elif piece.type == "L":
-                        if wall == "E" or wall == "D":
-                            if piece.orientation != "V":
-                                piece.actions.append(["LV", piece.row, piece.col])
-                        elif wall == "C" or wall == "B":
-                            if piece.orientation != "H":
-                                piece.actions.append(["LH", piece.row, piece.col])
+                                
                     
-                if corner == False and wall == False:
-                    if piece.type == "F":
-                        piece.actions.append(["FE", piece.row, piece.col])
-                        piece.actions.append(["FD", piece.row, piece.col])
-                        piece.actions.append(["FC", piece.row, piece.col])
-                        piece.actions.append(["FB", piece.row, piece.col])
-                        if piece.orientation == "E":
-                            piece.actions.remove(["FE", piece.row, piece.col])
-                        elif piece.orientation == "D":
-                            piece.actions.remove(["FD", piece.row, piece.col])
-                        elif piece.orientation == "C":
-                            piece.actions.remove(["FC", piece.row, piece.col])
-                        elif piece.orientation == "B":
-                            piece.actions.remove(["FB", piece.row, piece.col])
-                    elif piece.type == "B":
-                        piece.actions.append(["BE", piece.row, piece.col])
-                        piece.actions.append(["BD", piece.row, piece.col])
-                        piece.actions.append(["BC", piece.row, piece.col])
-                        piece.actions.append(["BB", piece.row, piece.col])
-                        if piece.orientation == "E":
-                            piece.actions.remove(["BE", piece.row, piece.col])
-                        elif piece.orientation == "D":
-                            piece.actions.remove(["BD", piece.row, piece.col])
-                        elif piece.orientation == "C":
-                            piece.actions.remove(["BC", piece.row, piece.col])
-                        elif piece.orientation == "B":
-                            piece.actions.remove(["BB", piece.row, piece.col])
-                    elif piece.type == "V":
-                        piece.actions.append(["VE", piece.row, piece.col])
-                        piece.actions.append(["VD", piece.row, piece.col])
-                        piece.actions.append(["VC", piece.row, piece.col])
-                        piece.actions.append(["VB", piece.row, piece.col])
-                        if piece.orientation == "E":
-                            piece.actions.remove(["VE", piece.row, piece.col])
-                        elif piece.orientation == "D":
-                            piece.actions.remove(["VD", piece.row, piece.col])
-                        elif piece.orientation == "C":
-                            piece.actions.remove(["VC", piece.row, piece.col])
-                        elif piece.orientation == "B":
-                            piece.actions.remove(["VB", piece.row, piece.col])
-                    elif piece.type == "L":
-                        if piece.orientation == "H":
-                            piece.actions.append(["LV", piece.row, piece.col])
-                        elif piece.orientation == "V":
-                            piece.actions.append(["LH", piece.row, piece.col])
-                            
-                if piece.type == "F":
-                    left, right = board.adjacent_horizontal_values(piece.row, piece.col)
-                    top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
-                    if top != None and top.type == "F":
-                        if ["FC", piece.row, piece.col] in piece.actions:
-                            piece.actions.remove(["FC", piece.row, piece.col])
-                    if bottom != None and bottom.type == "F":
-                        if ["FB", piece.row, piece.col] in piece.actions:
-                            piece.actions.remove(["FB", piece.row, piece.col])
-                    if left != None and left.type == "F":
-                        if ["FE", piece.row, piece.col] in piece.actions:
-                            piece.actions.remove(["FE", piece.row, piece.col])
-                    if right != None and right.type == "F":
-                        if ["FD", piece.row, piece.col] in piece.actions:
-                            piece.actions.remove(["FD", piece.row, piece.col])
-                            
-                print(piece.actions, ":", piece.number_actions())
-
-    def find_next_piece(self, state: PipeManiaState):
-        grid = state.board.grid
-        next = grid[0][0]
-        for line in grid:
-            for piece in line:
-                if len(piece.actions) < len(next.actions):
-                    next = piece
-        state.next_piece = next
-        
-    def restrict_after_result(self, state: PipeManiaState):
-        left, right = state.board.adjacent_horizontal_values(self.next_piece.row, self.next_piece.col)
-        top, bottom = state.board.adjacent_vertical_values(self.next_piece.row, self.next_piece.col)
-        
-        if left != None:
-            pass
-        if right != None:
-            pass
-        if top != None:
-            pass
-        if bottom != None:
-            pass
-        
-        
-                     
-
+              
     def result(self, state: PipeManiaState, action: list):
         board = state.board
         new_board = copy.deepcopy(board)
@@ -497,44 +259,33 @@ class PipeMania(Problem):
         grid = board.grid
         for row in grid:
             for piece in row:
-                adjacent_connections = [None, None, None, None]
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
                 top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
-                if top != None:
-                    adjacent_connections[0] = top.connections[2]
-                if right != None:
-                    adjacent_connections[1] = right.connections[3]
-                if bottom != None:
-                    adjacent_connections[2] = bottom.connections[0]
-                if left != None:
-                    adjacent_connections[3] = left.connections[1]
                 
-                if piece.connections[0] != adjacent_connections[0] and (piece.connections[0] != False or adjacent_connections[0] != None):
+                if (top == None and piece.connects_top()) or (top != None and (top.connects_bottom() != piece.connects_top())):
                     return False
-                if piece.connections[1] != adjacent_connections[1] and (piece.connections[1] != False or adjacent_connections[1] != None):
+                if (bottom == None and piece.connects_bottom()) or (bottom != None and (bottom.connects_top() != piece.connects_bottom())):
                     return False
-                if piece.connections[2] != adjacent_connections[2] and (piece.connections[2] != False or adjacent_connections[2] != None):
+                if (left == None and piece.connects_left()) or (left != None and (left.connects_right() != piece.connects_left())):
                     return False
-                if piece.connections[3] != adjacent_connections[3] and (piece.connections[3] != False or adjacent_connections[3] != None):
+                if (right == None and piece.connects_right()) or (right != None and (right.connects_left() != piece.connects_right())):
                     return False
-                
+                      
         return True
             
-
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         # TODO
         pass
 
-    # TODO: outros metodos da classe
 
 if __name__ == "__main__":
     # TODO:
     board = Board.parseinstance()
+    board.pre_process()
     state = PipeManiaState(board)
     pipemania = PipeMania(state)
     print(pipemania.goal_test(state))
-    pipemania.actions(state)
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,

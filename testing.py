@@ -1,1 +1,6 @@
-print("V" + "E")
+print(False != True)
+print(False != None)
+print(True != False)
+print(True != None)
+print(None != True)
+print(None != False)
