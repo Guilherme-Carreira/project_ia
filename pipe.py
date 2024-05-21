@@ -150,12 +150,13 @@ class Board:
     """"""
     def print_board(self):
         for i in range(self.size):
-            if (i != 0):
-                print('\n')
+            if i != 0:
+                print()
             for j in range(self.size):
-                if (j != 0):
+                if j != 0:
                     print('\t', end = '')
                 print(self.grid[i][j].get_piece(), end = '')
+        print()
 
     """"""
     @staticmethod
@@ -184,12 +185,10 @@ class PipeMania(Problem):
 
     def actions(self, state: PipeManiaState):
         board = state.board
-        if state.state_id <= 10:
-            print("State", state.state_id)
-            board.print_board()
-            print("\n")
         grid = board.grid
         return_actions = []
+        non_unique_actions = []
+        unique_value = 0
         for row in grid:
             for piece in row:
                 if not piece.solved:
@@ -269,7 +268,7 @@ class PipeMania(Problem):
                             elif piece.config[0] == "L":
                                 piece_actions.append(["LH", piece.row, piece.col])
                             elif piece.config[0] == "B":
-                                piece_actions.append(["Bc", piece.row, piece.col])    
+                                piece_actions.append(["BC", piece.row, piece.col])    
                     if corner == False and wall == False:
                         if piece.config[0] == "F":
                             piece_actions.append(["FC", piece.row, piece.col])
@@ -358,18 +357,29 @@ class PipeMania(Problem):
                             if ["FD", piece.row, piece.col] in piece_actions:
                                 piece_actions.remove(["FD", piece.row, piece.col]) 
 
+                    value = calculate_next_piece(corner, wall, len(piece_actions))
+                    if value > unique_value:
+                        unique_value = value
+                        non_unique_actions = piece_actions
+                    
                     if len(piece_actions) == 1:
-                        if piece_actions[0][0] != piece.config:
-                            return_actions.append(piece_actions[0])
+                        return_actions.append(piece_actions[0])
+        if len(return_actions) == 0:
+            return non_unique_actions
         return [return_actions]
                                           
     def result(self, state: PipeManiaState, actions: list):
         board = state.board
         new_board = copy.deepcopy(board)
         grid = new_board.grid
-        for action in actions:
-            piece = grid[action[1]][action[2]]
-            piece.change_orientation(action[0])
+        if isinstance(actions[0], list):
+            for action in actions:
+                piece = grid[action[1]][action[2]]
+                piece.change_orientation(action[0])
+                piece.solved = True
+        else:
+            piece = grid[actions[1]][actions[2]]
+            piece.change_orientation(actions[0])
             piece.solved = True
         new_state = PipeManiaState(new_board)
         return new_state
@@ -398,6 +408,13 @@ class PipeMania(Problem):
         # TODO
         pass
 
+def calculate_next_piece(corner, wall, moves):
+    result = 5 * moves
+    if corner != False:
+        result += 3
+    elif wall != False:
+        result += 1
+    return result
 
 if __name__ == "__main__":
     board = Board.parseinstance()
