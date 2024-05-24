@@ -374,9 +374,7 @@ class PipeMania(Problem):
                     if len(piece_actions) == 1:
                         return_actions.append(piece_actions[0])
         if len(return_actions) == 0:
-            print("State", state.state_id, "will branch 1")
             return non_unique_actions
-        print("State", state.state_id, "will branch 2")
         return [return_actions]
                                           
     def result(self, state: PipeManiaState, actions: list):
