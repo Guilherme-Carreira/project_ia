@@ -35,7 +35,7 @@ class Piece:
         self.config = piece # CONFIGURACAO DA PECA
         self.row = row
         self.col = col
-        self.solved = False
+        self.solved = 0
             
     def change_orientation(self, new_piece: str):
         if new_piece[0] == self.config[0]:
@@ -71,7 +71,7 @@ class Board:
     def __init__(self, grid: list): # definir o grid como um tuplo
         self.grid = grid
         self.size = len(grid)
-        self.solved_pieces = 0
+        self.pieces_solved = 0
     
     """"""
     def adjacent_vertical_values(self, row: int, col: int): # acima e abaixo
@@ -96,31 +96,31 @@ class Board:
         grid = board.grid
         size = len(grid)
         if grid[0][0].config == "VB": # TOP LEFT CORNER
-            grid[0][0].solved = True
-            self.solved_pieces += 1
+            grid[0][0].solved = 2
+            board.pieces_solved += 1
         if grid[0][size-1].config == "VE": # TOP RIGHT CORNER
-            grid[0][size-1].solved = True
-            self.solved_pieces += 1
+            grid[0][size-1].solved = 2
+            board.pieces_solved += 1
         if grid[size-1][0].config == "VD": # BOTTOM LEFT CORNER
-            grid[size-1][0].solved = True
-            self.solved_pieces += 1
+            grid[size-1][0].solved = 2
+            board.pieces_solved += 1
         if grid[size-1][size-1].config == "VC": # BOTTOM RIGHT CORNER
-            grid[size-1][size-1].solved = True
-            self.solved_pieces += 1
+            grid[size-1][size-1].solved = 2
+            board.pieces_solved += 1
             
         for i in range(1, size - 1):
             if grid[0][i].config == "LH" or grid[0][i].config == "BB": # TOP WALL
-                grid[0][i].solved = True
-                self.solved_pieces += 1
+                grid[0][i].solved = 2
+                board.pieces_solved += 1
             if grid[size-1][i].config == "LH" or grid[size-1][i].config == "BC": # BOTTOM WALL
-                grid[size-1][i].solved = True
-                self.solved_pieces += 1
+                grid[size-1][i].solved = 2
+                board.pieces_solved += 1
             if grid[i][0].config == "LV" or grid[i][0].config == "BD": # LEFT WALL
-                grid[i][0].solved = True
-                self.solved_pieces += 1
+                grid[i][0].solved = 2
+                board.pieces_solved += 1
             if grid[i][size-1].config == "LV" or grid[i][size-1].config == "BE": # RIGHT WALL
-                grid[i][size-1].solved = True
-                self.solved_pieces += 1
+                grid[i][size-1].solved = 2
+                board.pieces_solved += 1
 
     """"""
     def in_corner(self, piece: Piece):
@@ -190,7 +190,7 @@ class Board:
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
         self.initial = state
-        self.next_piece = None             
+        self.next_piece = None                    
 
     def actions(self, state: PipeManiaState):
         board = state.board
@@ -200,7 +200,7 @@ class PipeMania(Problem):
         unique_value = 100
         for row in grid:
             for piece in row:
-                if not piece.solved:
+                if piece.solved != 2:
                     piece_actions = []
                     corner = board.in_corner(piece)
                     wall = board.in_wall(piece)
@@ -302,7 +302,7 @@ class PipeMania(Problem):
                     top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                     
                     if top != None:
-                        if top.solved:
+                        if top.solved == 2:
                             if top.connects_bottom(top.config):
                                 if piece.config[0] == "F":
                                     piece_actions = [["FC", piece.row, piece.col]]
@@ -318,7 +318,7 @@ class PipeMania(Problem):
                             if ["FC", piece.row, piece.col] in piece_actions:
                                 piece_actions.remove(["FC", piece.row, piece.col])
                     if bottom != None:
-                        if bottom.solved:
+                        if bottom.solved == 2:
                             if bottom.connects_top(bottom.config):
                                 if piece.config[0] == "F":
                                     piece_actions = [["FB", piece.row, piece.col]]
@@ -334,7 +334,7 @@ class PipeMania(Problem):
                             if ["FB", piece.row, piece.col] in piece_actions:
                                 piece_actions.remove(["FB", piece.row, piece.col]) 
                     if left != None:
-                        if left.solved:
+                        if left.solved == 2:
                             if left.connects_right(left.config):
                                 if piece.config[0] == "F":
                                     piece_actions = [["FE", piece.row, piece.col]]
@@ -350,7 +350,7 @@ class PipeMania(Problem):
                             if ["FE", piece.row, piece.col] in piece_actions:
                                 piece_actions.remove(["FE", piece.row, piece.col]) 
                     if right != None:
-                        if right.solved:
+                        if right.solved == 2:
                             if right.connects_left(right.config):
                                 if piece.config[0] == "F":
                                     piece_actions = [["FD", piece.row, piece.col]]
@@ -366,17 +366,16 @@ class PipeMania(Problem):
                             if ["FD", piece.row, piece.col] in piece_actions:
                                 piece_actions.remove(["FD", piece.row, piece.col]) 
 
-                    value = calculate_next_piece(corner, wall, len(piece_actions))
+                    value = calculate_next_piece(corner, wall, len(piece_actions), piece.solved)
                     if value < unique_value:
                         unique_value = value
                         non_unique_actions = piece_actions
                     
                     if len(piece_actions) == 1:
                         return_actions.append(piece_actions[0])
+                        board.pieces_solved += 1
         if len(return_actions) == 0:
-            print("State", state.state_id, "will branch 1")
             return non_unique_actions
-        print("State", state.state_id, "will branch 2")
         return [return_actions]
                                           
     def result(self, state: PipeManiaState, actions: list):
@@ -387,83 +386,45 @@ class PipeMania(Problem):
             for action in actions:
                 piece = grid[action[1]][action[2]]
                 piece.change_orientation(action[0])
-                piece.solved = True
-                board.solved_pieces += 1
+                piece.solved = 2
         else:
             piece = grid[actions[1]][actions[2]]
             piece.change_orientation(actions[0])
-            piece.solved = True
-            board.solved_pieces += 1
+            piece.solved = 1
         new_state = PipeManiaState(new_board)
         return new_state
 
     def goal_test(self, state: PipeManiaState):
         board = state.board
         grid = board.grid
-        visited = set()
-        stack = [grid[0][0]]
-        while stack:
-            piece = stack.pop()
-            if piece not in visited:
-                visited.add(piece)
-                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
-                left, right = board.adjacent_horizontal_values(piece.row, piece.col)
-                if top != None:
-                    if (top.connects_bottom(top.config) and piece.connects_top(piece.config)) and top not in visited:
-                        stack.append(top)
-                if bottom != None:
-                    if (bottom.connects_top(bottom.config) and piece.connects_bottom(piece.config)) and bottom not in visited:
-                        stack.append(bottom)
-                if left != None:
-                    if (left.connects_right(left.config) and piece.connects_left(piece.config)) and left not in visited:
-                        stack.append(left)
-                if right != None:
-                    if (right.connects_left(right.config) and piece.connects_right(piece.config)) and right not in visited:
-                        stack.append(right)
-        
-        return len(visited) == (len(grid) * len(grid))
-        
-    '''
-    def h(self, node: Node):
-        board = node.state.board
-        return (len(board.grid) * len(board.grid)) - board.solved_pieces
- 
-    '''
-    def h(self, node: Node):
-        board = node.state.board
-        grid = board.grid
-        expected_connections = 0
-        total_connections = 0
         for row in grid:
             for piece in row:
-                if piece.config[0] == "F": total_connections += 1
-                if piece.config[0] == "B": total_connections += 3
-                if piece.config[0] == "V" or piece.config[0] == "L": total_connections += 2
-                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
+                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
                 
-                if top != None:
-                    if top.connects_bottom(top.config) and piece.connects_top(piece.config):
-                        expected_connections += 1
-                if bottom != None:
-                    if bottom.connects_top(bottom.config) and piece.connects_bottom(piece.config):
-                        expected_connections += 1
-                if left != None:
-                    if left.connects_right(left.config) and piece.connects_left(piece.config):
-                        expected_connections += 1
-                if right != None:
-                    if right.connects_left(right.config) and piece.connects_right(piece.config):
-                        expected_connections += 1
-        return total_connections - expected_connections
-    
-def calculate_next_piece(corner, wall, moves):
-    result = 5 * moves
+                if (top == None and piece.connects_top(piece.config)) or (top != None and (top.connects_bottom(top.config) != piece.connects_top(piece.config))):
+                    return False
+                if (bottom == None and piece.connects_bottom(piece.config)) or (bottom != None and (bottom.connects_top(bottom.config) != piece.connects_bottom(piece.config))):
+                    return False
+                if (left == None and piece.connects_left(piece.config)) or (left != None and (left.connects_right(left.config) != piece.connects_left(piece.config))):
+                    return False
+                if (right == None and piece.connects_right(piece.config)) or (right != None and (right.connects_left(right.config) != piece.connects_right(piece.config))):
+                    return False
+                      
+        return True
+            
+    def h(self, node: Node):
+        """Função heuristica utilizada para a procura A*."""
+        # TODO
+        pass
+
+def calculate_next_piece(corner, wall, moves, solved_state):
+    state = solved_state + 1
+    result = 10 * state * moves
     if corner != False:
-        result += 1
-    elif wall != False:
-        result += 3
-    else:
         result += 4
+    elif wall != False:
+        result += 6
     return result
 
 if __name__ == "__main__":

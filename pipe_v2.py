@@ -93,7 +93,7 @@ class Board:
         
     """"""    
     def pre_process(self):
-        grid = board.grid
+        grid = self.grid
         size = len(grid)
         if grid[0][0].config == "VB": # TOP LEFT CORNER
             grid[0][0].solved = True
@@ -190,7 +190,7 @@ class Board:
 class PipeMania(Problem):
     def __init__(self, state: PipeManiaState):
         self.initial = state
-        self.next_piece = None             
+        self.next_piece = None                    
 
     def actions(self, state: PipeManiaState):
         board = state.board
@@ -374,9 +374,7 @@ class PipeMania(Problem):
                     if len(piece_actions) == 1:
                         return_actions.append(piece_actions[0])
         if len(return_actions) == 0:
-            print("State", state.state_id, "will branch 1")
             return non_unique_actions
-        print("State", state.state_id, "will branch 2")
         return [return_actions]
                                           
     def result(self, state: PipeManiaState, actions: list):
@@ -388,47 +386,40 @@ class PipeMania(Problem):
                 piece = grid[action[1]][action[2]]
                 piece.change_orientation(action[0])
                 piece.solved = True
-                board.solved_pieces += 1
+                new_board.solved_pieces += 1
         else:
             piece = grid[actions[1]][actions[2]]
             piece.change_orientation(actions[0])
             piece.solved = True
-            board.solved_pieces += 1
+            new_board.solved_pieces += 1
         new_state = PipeManiaState(new_board)
         return new_state
 
     def goal_test(self, state: PipeManiaState):
         board = state.board
         grid = board.grid
-        visited = set()
-        stack = [grid[0][0]]
-        while stack:
-            piece = stack.pop()
-            if piece not in visited:
-                visited.add(piece)
-                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
+        for row in grid:
+            for piece in row:
                 left, right = board.adjacent_horizontal_values(piece.row, piece.col)
-                if top != None:
-                    if (top.connects_bottom(top.config) and piece.connects_top(piece.config)) and top not in visited:
-                        stack.append(top)
-                if bottom != None:
-                    if (bottom.connects_top(bottom.config) and piece.connects_bottom(piece.config)) and bottom not in visited:
-                        stack.append(bottom)
-                if left != None:
-                    if (left.connects_right(left.config) and piece.connects_left(piece.config)) and left not in visited:
-                        stack.append(left)
-                if right != None:
-                    if (right.connects_left(right.config) and piece.connects_right(piece.config)) and right not in visited:
-                        stack.append(right)
-        
-        return len(visited) == (len(grid) * len(grid))
-        
-    '''
+                top, bottom = board.adjacent_vertical_values(piece.row, piece.col)
+                
+                if (top == None and piece.connects_top(piece.config)) or (top != None and (top.connects_bottom(top.config) != piece.connects_top(piece.config))):
+                    return False
+                if (bottom == None and piece.connects_bottom(piece.config)) or (bottom != None and (bottom.connects_top(bottom.config) != piece.connects_bottom(piece.config))):
+                    return False
+                if (left == None and piece.connects_left(piece.config)) or (left != None and (left.connects_right(left.config) != piece.connects_left(piece.config))):
+                    return False
+                if (right == None and piece.connects_right(piece.config)) or (right != None and (right.connects_left(right.config) != piece.connects_right(piece.config))):
+                    return False
+                      
+        return True
+    
+    '''       
     def h(self, node: Node):
         board = node.state.board
         return (len(board.grid) * len(board.grid)) - board.solved_pieces
- 
-    '''
+    ''' 
+    
     def h(self, node: Node):
         board = node.state.board
         grid = board.grid
@@ -455,13 +446,13 @@ class PipeMania(Problem):
                     if right.connects_left(right.config) and piece.connects_right(piece.config):
                         expected_connections += 1
         return total_connections - expected_connections
-    
+
 def calculate_next_piece(corner, wall, moves):
     result = 5 * moves
     if corner != False:
         result += 1
     elif wall != False:
-        result += 3
+        result += 2
     else:
         result += 4
     return result
@@ -471,7 +462,7 @@ if __name__ == "__main__":
     board.pre_process()
     state = PipeManiaState(board)
     pipemania = PipeMania(state)
-    goal = breadth_first_tree_search(pipemania)
+    goal = depth_first_tree_search(pipemania)
     solved_board = goal.state.board
     solved_board.print_board()
     # TODO:
